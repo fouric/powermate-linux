@@ -209,6 +209,7 @@ int main(int argc, char *argv[]) {
 	int timeout;
 
 	// TODO: also split this into a separate function
+	// TODO: CL port: https://github.com/joevandyk/Joe-s-Lisp-Exercises/blob/master/libraries/iolib/io.multiplex/fd-wait.lisp or call out to CL-IPC (https://common-lisp.net/project/cl-ipc/) using https://gitlab.common-lisp.net/cl-ipc/cl-ipc/blob/master/sample-client.c
 	while (1) {
 		//struct pollfd *pfds = malloc((nfds+1)*sizeof(struct pollfd));
 		//memcpy(pfds, ufds, nfds*sizeof(struct pollfd));
