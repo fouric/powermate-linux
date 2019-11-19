@@ -21,8 +21,7 @@ char *counter_clock_wise_command = NULL;
 int64_t long_press_ms = 1000;
 
 // State
-short muted = 0;
-short movie_mode = 0;
+short led_status = 0;
 short knob_depressed = 0;
 int devfd = 0;
 struct timeval knob_depressed_timestamp;
@@ -47,14 +46,6 @@ void set_led(unsigned int val) {
 	ev.value = val;
 	if (write(devfd, &ev, sizeof(ev)) != sizeof(ev)) {
 		fprintf(stderr, "write(): %s\n", strerror(errno));
-	}
-}
-
-void update_led(unsigned int val) {
-	if (muted || movie_mode) {
-		set_led(0);
-	} else {
-		set_led(val);
 	}
 }
 
@@ -119,15 +110,13 @@ int main(int argc, char *argv[]) {
 			FILE *f;
 			if ((f = fopen(config_path, "r")) == NULL) {
 				fprintf(stderr, "Failed to open file.\n");
-			}
-			else {
+			} else {
 				char errbuf[200];
 				toml_table_t *conf = toml_parse_file(f, errbuf, sizeof(errbuf));
 				fclose(f);
 				if (conf == 0) {
 					fprintf(stderr, "Error: %s\n", errbuf);
-				}
-				else {
+				} else {
 					const char *raw;
 					if ((raw=toml_raw_in(conf,"dev")) && toml_rtos(raw,&dev)) {
 						fprintf(stderr, "Warning: bad value in 'dev', expected a string.\n");
@@ -221,7 +210,7 @@ int main(int argc, char *argv[]) {
 				printf("Device connected!\n");
 				// When the device is connected, the kernel driver sets the LED to 50% brightness
 				// We have to update the LED to represent the current volume
-				update_led(sizeof(unsigned int) >> 1);
+				set_led(sizeof(unsigned int) >> 1);
 			}
 		}
 
@@ -245,23 +234,17 @@ int main(int argc, char *argv[]) {
 		}
 
 		/*
-		int i;
-		for (int i=0; i < nfds+1; i++) {
+		  int i;
+		  for (int i=0; i < nfds+1; i++) {
 		  fprintf(stderr, "%d: fd: %d. events: %d. revents: %d.\n", i, pfds[i].fd, pfds[i].events, pfds[i].revents);
-		}
+		  }
 		*/
 
 		if (knob_depressed && ret == 0) {
 			// timer ran out
 			knob_depressed = 0;
-			if (long_press_command == NULL) {
-				movie_mode = !movie_mode;
-				printf("Movie mode: %d\n", movie_mode);
-			}
-			else {
-				exec_command(long_press_command);
-			}
-			update_led(sizeof(unsigned int) >> 1);
+			exec_command(long_press_command);
+			set_led(sizeof(unsigned int) >> 1);
 		}
 
 		if (fds[0].revents > 0) {
@@ -290,6 +273,13 @@ int main(int argc, char *argv[]) {
 						// knob released
 						knob_depressed = 0;
 						exec_command(knob_command);
+						if (led_status) {
+							led_status = 0;
+							set_led(0);
+						} else {
+							led_status = 1;
+							set_led(255);
+						}
 					}
 				}
 			}
