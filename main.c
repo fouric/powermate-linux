@@ -14,7 +14,6 @@
 
 // Settings
 char *dev = "/dev/input/powermate";
-double p = 2.0;
 char *knob_command = NULL;
 char *long_press_command = NULL;
 char *clock_wise_command = NULL;
@@ -135,9 +134,6 @@ int main(int argc, char *argv[]) {
 					}
 					if ((raw=toml_raw_in(conf,"daemonize")) && toml_rtob(raw,&daemonize)) {
 						fprintf(stderr, "Warning: bad value in 'daemonize', expected a boolean.\n");
-					}
-					if ((raw=toml_raw_in(conf,"p")) && toml_rtod(raw,&p)) {
-						fprintf(stderr, "Warning: bad value in 'p', expected a double.\n");
 					}
 					if ((raw=toml_raw_in(conf,"knob_command")) && toml_rtos(raw,&knob_command)) {
 						fprintf(stderr, "Warning: bad value in 'knob_command', expected a string.\n");
